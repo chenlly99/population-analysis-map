@@ -1,0 +1,272 @@
+var opts = {
+		map: null,
+		
+		center:[53640424/460800, 18388081/460800],//默认中心点是北京
+        scenicList: null,//景区列表
+        hotPoints: {"point":[], "max": []},//热力区
+		zoom:9,
+		heatmapOverlay: null,
+};
+var Golbal = {
+		init: function(){
+			var that = this;
+			
+			if(!Golbal.isSupportCanvas()){
+				$(".gritter-with-image").html('<span class="gritter-title">您所使用的浏览器不能使用热力图功能~</span><p>热力图只支持有canvas支持的浏览器</p>');
+				$("#gritter-notice-wrapper").fadeIn(300);
+			}
+			Golbal.showMarkLayer();
+			that.initResize();
+			MAP.initMap();
+			that.setScenicList();//景区列表
+			that.domChangeHandler();
+		},
+		initResize: function(){
+			$(window).off("resize").on("resize", function() {
+		        var winH = $(window).height();
+		        $("#content").height(winH);
+		        $("#content-box").height(winH - $("#header").height() - $("#content-header").height());
+		    });
+		    $(window).trigger("resize");
+		},
+		domChangeHandler: function(){//dom事件绑定
+			var that = this;
+			$("#sidebar-items ul>li a").on("moveover", function(event){
+				var dom = $(this);
+				if(event.stopPropagation){
+					event.stopPropagation();
+				}else{
+					event.cancelBubble = true;
+				}
+				if(!dom.parent().parent().parent().hasClass("active")){
+					dom.parent().parent().parent().style.background = "none";
+				}
+			});
+			$("#sidebar-items li").on("click", function(e){
+				var dom = $(this);
+				if(dom.hasClass("submenu")){
+					if(!dom.hasClass("open")){
+						dom.find(".sub-items").slideDown(300);
+					}else{
+						dom.find(".sub-items").slideUp(300);
+					}
+					dom.toggleClass("open");
+				}else{
+					$("#sidebar-items li").removeClass("active");
+					dom.addClass("active")
+					
+					var _text = dom.find("span:first").text();
+					$("#breadcrumb").html('<a id="one-bar" href="javascript:void(0)" class="tip-bottom"><i class="icon-home"></i> '+_text+'</a>');
+					
+					that.initParams();//清空一切
+				}
+			});
+			$("#sidebar-items ul>li a").on("click", function(event){
+				var dom = $(this);
+				if(event.stopPropagation){
+					event.stopPropagation();
+				}else{
+					event.cancelBubble = true;
+				}
+				$("#sidebar-items li").removeClass("active");
+				$("#sidebar-items li.submenu").removeClass("open");
+				dom.parent().parent().parent().addClass("active").addClass("open");
+				
+				var sub_text = dom.text();
+				var p_text = dom.parent().parent().parent().find("span:first").text();
+				$("#breadcrumb").html('<a id="one-bar" href="javascript:void(0)" class="tip-bottom"><i class="icon-home"></i> '+p_text+'</a><a id="two-bar" href="javascript:void(0)">'+sub_text+'</a>');
+				
+				that.initParams();//清空一切
+				
+				var type = dom.attr("type");
+				if(type == "scenicList"){
+					that.setScenicList();//景区列表
+				}
+			});
+			$(".gritter-close").on("click", function(e){
+				$("#gritter-notice-wrapper").fadeOut(200);
+			});
+		},
+		displaynavbar: function(dom){
+			if(!$(dom).hasClass("open")){
+				$("#Hui-aside").addClass("_hide");
+				$("#dislpayArrow").addClass("_hide");
+				$("#Hui-article-box").addClass("full_show");
+				$("#data-chart").addClass("full_show");
+			}else{
+				$("#dislpayArrow").removeClass("_hide");
+				$("#Hui-aside").removeClass("_hide");
+				$("#Hui-article-box").removeClass("full_show");
+				$("#data-chart").removeClass("full_show");
+			}
+			$(dom).toggleClass("open");
+		},
+		getJSON: function(url, fn, opts){
+			$.getJSON(url, {}, function(json){
+				if(typeof fn == "function"){
+					if(json && json.isSuccess == 1 && json.message == "OK") fn(json);
+					else fn(null);
+				}
+			});
+		},
+		setScenicList: function(){//景区列表
+			var that = this;
+			that.getJSON("./data/scenicList.json", function(data){
+				that.handleJSON(data, "scenicList");
+				Golbal.hideMarkLayer();
+			}, null);
+		},
+		initHeapParams: function(){//隐藏热力区 and 初始化热力区参数
+			MAP.closeHeatmap();//隐藏热力区
+			opts.center = [53640424/460800, 18388081/460800];//默认中心点是北京
+			opts.scenicList = null;//景区列表
+			opts.hotPoints = {"point":[], "max": []};//热力区
+			opts.zoom = 9;
+			opts.heatmapOverlay = null;
+		},
+		initParams: function(){
+			var that = this;
+			that.initHeapParams();//隐藏热力区 and 初始化热力区参数
+		},
+		handleJSON: function(json, type){
+			if(type == "scenicList"){
+				var _html = "";
+				var geoCoordsRange = {maxLon:null, minLon:null,maxLat:null,minLat:null};
+				if(json){
+ 					opts.scenicList = json.data[0];
+					if(opts.scenicList.length > 0){
+						for(var i=0;i<opts.scenicList.length; i++){
+							var scenic = opts.scenicList[i];
+							var _bd09 = MAP.gps84_To_Bd09(+opts.scenicList[i].longitude, +opts.scenicList[i].latitude);
+							opts.scenicList[i].longitude = _bd09[0];
+							opts.scenicList[i].latitude = _bd09[1];
+							
+							if (!geoCoordsRange.maxLon || geoCoordsRange.maxLon < +opts.scenicList[i].longitude) geoCoordsRange.maxLon = +opts.scenicList[i].longitude;
+		                    if (!geoCoordsRange.minLon || geoCoordsRange.minLon > +opts.scenicList[i].longitude) geoCoordsRange.minLon = +opts.scenicList[i].longitude;
+		                    if (!geoCoordsRange.maxLat || geoCoordsRange.maxLat < +opts.scenicList[i].latitude) geoCoordsRange.maxLat = +opts.scenicList[i].latitude;
+		                    if (!geoCoordsRange.minLat || geoCoordsRange.minLat > +opts.scenicList[i].latitude) geoCoordsRange.minLat = +opts.scenicList[i].latitude;
+		                    _html += '<a href="javascript:void(0)" id="scenic-"' + opts.scenicList[i].id + ' c1=' + opts.scenicList[i].c1 + ' c2='+opts.scenicList[i].c2+' c3='+opts.scenicList[i].c3+' c4='+opts.scenicList[i].c4+'>' + opts.scenicList[i].scenicName + '</a>';
+		                    opts.hotPoints.point.push({"lng":opts.scenicList[i].longitude,"lat":opts.scenicList[i].latitude,"count":(opts.scenicList[i].c1+opts.scenicList[i].c2+opts.scenicList[i].c3+opts.scenicList[i].c4)/4});
+		                    opts.hotPoints.max.push(opts.scenicList[i].c4);
+						}
+					}
+					if(geoCoordsRange.maxLon && geoCoordsRange.minLon && geoCoordsRange.maxLat && geoCoordsRange.minLat){
+						opts.center = [(geoCoordsRange.maxLon+geoCoordsRange.minLon)/2, (geoCoordsRange.maxLat+geoCoordsRange.minLat)/2];
+						opts.zoom = 9;
+					}
+				}
+				$(".menu_dropdown").html(_html);
+				MAP.setHeatMapOverly();
+				MAP.openHeatmap();
+			}
+		},
+		each: function(elements, callback){
+	        var i, key
+	        if (typeof elements.length == 'number') {
+	          for (i = 0; i < elements.length; i++)
+	            if (callback.call(elements[i], i, elements[i]) === false) return elements
+	        } else {
+	          for (key in elements)
+	            if (callback.call(elements[key], key, elements[key]) === false) return elements
+	        }
+
+	        return elements
+	    },
+		showMarkLayer: function(container){
+			container = container || document.querySelector("#content-box");
+			var maskLayer = document.querySelector("#mask-layer");
+			if(!maskLayer){
+				maskLayer = document.createElement("div");
+		    	maskLayer.id = "mask-layer";
+		    	maskLayer.className = "mask-layer";
+		    	
+		    	var main_inner = document.createElement("div");
+		    	main_inner.className = "main_inner clearfix";
+		    	
+		    	var mask_div = document.createElement("div");
+		    	mask_div.className = "mask-div";
+		    	
+		    	var loader_inner = document.createElement("div");
+		    	loader_inner.className = "loader-inner line-spin-fade-loader";
+		    	
+		    	var div1 = document.createElement("div");
+		    	var div2 = document.createElement("div");
+		    	var div3 = document.createElement("div");
+		    	var div4 = document.createElement("div");
+		    	var div5 = document.createElement("div");
+		    	var div6 = document.createElement("div");
+		    	var div7 = document.createElement("div");
+		    	var div8 = document.createElement("div");
+		    	loader_inner.appendChild(div1);
+		    	loader_inner.appendChild(div2);
+		    	loader_inner.appendChild(div3);
+		    	loader_inner.appendChild(div4);
+		    	loader_inner.appendChild(div5);
+		    	loader_inner.appendChild(div6);
+		    	loader_inner.appendChild(div7);
+		    	loader_inner.appendChild(div8);
+		    	
+		    	mask_div.appendChild(loader_inner);
+		    	main_inner.appendChild(mask_div);
+		    	maskLayer.appendChild(main_inner);
+		    	
+		    	container.appendChild(maskLayer);
+			}
+			maskLayer.style.display = "block";
+			maskLayer.style.opacity = 1;
+		},
+		hideMarkLayer: function(){
+			var maskLayer = document.querySelector("#mask-layer");
+			if(maskLayer){
+				maskLayer.style.opacity = 0;
+		    	setTimeout(function(){
+		    		maskLayer.style.display = "none";
+		    	}, 200);
+			}
+		},
+		//判断浏览区是否支持canvas
+	    isSupportCanvas: function(){
+	        var elem = document.createElement('canvas');
+	        return !!(elem.getContext && elem.getContext('2d'));
+	    },
+};
+var MAP = {
+		initMap: function(){//初始化地图实例
+			opts.map = new BMap.Map("Hui-article-box");
+			opts.map.enableScrollWheelZoom(); // 允许滚轮缩放
+		},
+		setCenterAndZoom: function(point, zoom){//设置地图中心点和缩放比例尺
+			var _point = new BMap.Point(point[0], point[1]);
+			opts.map.centerAndZoom(_point, zoom);
+		},
+		gps84_To_Bd09: function(lon, lat){//gps84坐标转换成百度Bd09坐标
+			var _point = PositionUtil.gps84_To_Gcj02(+lat,+lon);
+			_point = PositionUtil.gcj02_To_Bd09(_point.wgLat, _point.wgLon);//return {"wgLat": bd_lat, "wgLon": bd_lon};   
+			return[_point.wgLon, _point.wgLat];//[lon, loat]
+		},
+		setHeatMapOverly: function(){
+			MAP.setCenterAndZoom(opts.center, opts.zoom);
+			if(opts.hotPoints && opts.hotPoints.point.length > 0 && opts.hotPoints.max.length > 0){
+				opts.heatmapOverlay = new BMapLib.HeatmapOverlay({"radius":20});
+				opts.map.addOverlay(opts.heatmapOverlay);
+				var max = 0;
+				for(var i=0; i<opts.hotPoints.max.length;i++){
+					if(max < +opts.hotPoints.max[i]) max = +opts.hotPoints.max[i];
+				}
+				opts.heatmapOverlay.setDataSet({data:opts.hotPoints.point, max: max});
+			}
+		},
+		openHeatmap: function(){
+			if(opts.heatmapOverlay){
+				opts.heatmapOverlay.show();
+			}
+		},
+		closeHeatmap: function(){
+			if(opts.heatmapOverlay){
+				opts.heatmapOverlay.hide();
+			}
+		},
+};
+$(function(){
+	Golbal.init();
+});

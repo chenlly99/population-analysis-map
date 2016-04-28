@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>基于手机信令的交通信息采集与分析系统</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store,no-siteapp, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<META HTTP-EQUIV="expires" CONTENT="Wed, 26 Feb 1997 08:21:57 GMT">
+<meta name="viewport" content="width=device-width,inital-scale=1.0,maximum-scale=1.0,user-scalable=no,minimal-ui;">
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="基于手机信令的交通信息采集与分析系统">
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="full-screen" content="yes">
+<meta name="x5-fullscreen" content="true">
+<meta name="format-detection" content="telephone=no">
+<meta name="screen-orientation" content="portrait">
+<meta name="x5-orientation" content="portrait">
+<link rel='stylesheet' type='text/css' href='./css/base.css' />
+<link rel='stylesheet' type='text/css' href='./css/font-awesome.css' />
+<link rel='stylesheet' type='text/css' href='./css/jquery.datetimepicker.css' />
+<link rel='stylesheet' type='text/css' href='./css/main.css' />
+<script type="text/javascript" src="./js/jquery.js"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=askOH39FFisAaG1Zun5RT18a"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
+<script src="./js/jquery.datetimepicker.full.js"></script>
+<script src="./js/echarts.js"></script>
+<script type="text/javascript" src="./js/PositionUtil.js"></script>
+<script type="text/javascript" src="./js/Base64.js"></script>
+<script type="text/javascript" src="./js/main.js"></script>
+</head>
+<body>
+<!-- <div id="sidebar" class="sidebar">
+	 <div id="logo-box" class="logo-box">
+	 	<h1><a href="javascript:void(0)"></a></h1>
+	 </div>
+	 <ul id="sidebar-items" class="sidebar-items">
+		<li class="submenu active open">
+			<a href="javascript:void(0)">
+				<i class="icon icon-home"></i>
+				<span>信令主页</span>
+				<span class="label label-important">5</span>
+			</a>
+			<ul class="sub-items">
+				<li><a href="javascript:void(0)" type="scenicList" state="now">景区-实时状态</a></li>
+				<li><a href="javascript:void(0)" type="scenicList" state="history">景区-历史状态</a></li>
+				<li><a href="javascript:void(0)" type="scenicInout">景区-出入口人流分析</a></li>
+				<li><a href="javascript:void(0)" type="computeAttribution" state="now">景区（归属地分析）-实时状态</a></li>
+				<li><a href="javascript:void(0)" type="computeAttribution" state="history">景区（归属地分析）-历史状态</a></li>
+			</ul>
+		</li>
+		<li>
+			<a href="javascript:void(0)" type="resultRoad" state="now">
+				<i class="icon icon-inbox"></i>
+				<span>道路-实时状态</span>
+			</a>
+		</li>
+		<li>
+			<a href="javascript:void(0)" type="resultRoad" state="history">
+				<i class="icon icon-file"></i>
+				<span>道路-历史状态</span>
+			</a>
+		</li>
+	</ul>
+</div> -->
+<div id="sidebar" class="sidebar">
+	 <div id="logo-box" class="logo-box">
+	 	<h1><a href="javascript:void(0)"></a></h1>
+	 </div>
+	 <ul id="sidebar-items" class="sidebar-items">
+		<li id="sidebar-item-one" class="submenu active open">
+			<a href="javascript:void(0)">
+				<i class="icon icon-home"></i>
+				<span>区域人口密度监测</span>
+				<span class="label label-important">2</span>
+			</a>
+			<ul class="sub-items">
+				<li><a href="javascript:void(0)" type="scenicList" id="scenicList-now" state="now" class="active">实时数据</a></li>
+				<li><a href="javascript:void(0)" type="scenicList" state="history">历史数据</a></li>
+			</ul>
+		</li>
+		<li>
+			<a href="javascript:void(0)" type="scenicInout">
+				<i class="icon icon-hdd"></i>
+				<span>区域出入人流分析</span>
+			</a>
+		</li>
+		<li class="submenu">
+			<a href="javascript:void(0)">
+				<i class="icon icon-hdd"></i>
+				<span>区域（归属地分析）</span>
+				<span class="label label-important">2</span>
+			</a>
+			<ul class="sub-items">
+				<li><a href="javascript:void(0)" type="computeAttribution" state="now">实时数据</a></li>
+				<li><a href="javascript:void(0)" type="computeAttribution" state="history">历史数据</a></li>
+			</ul>
+		</li>
+		<li id="sidebar-item-last" class="submenu">
+			<a href="javascript:void(0)">
+				<i class="icon icon-inbox"></i>
+				<span>道路状态监测</span>
+				<span class="label label-important">2</span>
+			</a>
+			<ul class="sub-items">
+				<li><a href="javascript:void(0)" id="resultroad-now" type="resultRoad" state="now">实时数据</a></li>
+				<li><a href="javascript:void(0)" type="resultRoad" state="history">历史数据</a></li>
+			</ul>
+		</li>
+	</ul>
+</div>
+<div id="content" class="content">
+	<div id="header" class="header">
+		<ul class="nav">
+			<li><a href="javascript:void(0)" id="pint-scenic" class="active">重点区域监测</a></li>
+			<li><a href="javascript:void(0)" id="pint-line">主要道路监测</a></li>
+		</ul>
+		<ul class="Hui-userbar">
+			<!-- <li>超级管理员</li>
+			<li class="dropDown dropDown_hover"><a href="javascript:void(0)" class="dropDown_A">admin <i class="Hui-iconfont"></i></a></li> -->
+		</ul>
+	</div>
+	<div id="content-header" class="content-header">
+		<div id="breadcrumb" class="breadcrumb">
+			<a href="javascript:void(0)" class="tip-bottom">
+				<i class="icon-home"></i>
+				区域人口密度监测
+			</a>
+			<a href="javascript:void(0)">实时数据</a>
+		</div>
+		<div class="data-datetimepicker-box" style="opacity:0;display:none;">
+			<label class="datetimepicker-label">历史日期</label>
+			<input type="text" value="" id="end-datetimepicker" class="end-datetimepicker" />
+			<div id="history-button" class="history-button">查询</div>
+		</div>
+		<div class="inout-data-timepicker-box" style="opacity:0;display:none;">
+			<label class="datetimepicker-label">开始日期</label>
+			<input type="text" value="" id="inout-start-timepicker" class="inout-start-timepicker" />
+			<label class="datetimepicker-label">结束日期</label>
+			<input type="text" value="" id="inout-end-timepicker" class="inout-end-timepicker" />
+			<div id="inout-history-button" class="history-button">查询</div>
+		</div>
+	</div>
+	<div id="content-box" class="content-box">
+		<div class="hotmap-order-box" id="hotmap-order-box">
+			<div class="hot-color red"></div>
+			<div class="hot-color yellow"></div>
+			<div class="hot-color green"></div>
+			<div class="hot-color blue"></div>
+		</div>
+		<div class="mapline-order-box" id="mapline-order-box">
+			<div class="mapline-color-block-green" style=""></div>
+			<div class="mapline-color-block-yellow"></div>
+			<div class="mapline-color-block-red"></div>
+			<div class="mapline-color" style="top:20%;">>48</div>
+			<div class="mapline-color" style="top:56%;">20</div>
+			<div class="mapline-color" style="top:90%">0</div>
+		</div>
+		<div id="Hui-aside" class="Hui-aside">
+			<div class="menu_dropdown bk_2">
+				<!-- <a href="javascript:void(0)">全部景区</a>
+				<a href="javascript:void(0)">全部景区</a>
+				<a href="javascript:void(0)">全部景区</a>
+				<a href="javascript:void(0)">全部景区</a>
+				<a href="javascript:void(0)">全部景区</a>
+				<a href="javascript:void(0)">全部景区</a>
+				<a href="javascript:void(0)">全部景区</a> -->
+			</div>
+		</div>
+		<div id="dislpayArrow" class="dislpayArrow">
+			<a class="pngfix" href="javascript:void(0);" onclick="Golbal.displaynavbar(this)"></a>
+		</div>
+		<div id="Hui-article-box" class="Hui-article-box">
+			
+		</div>
+		<div id="data-chart" class="data-chart hide">
+			<div id="data-chart-top" class="data-chart-top"></div>
+			<div id="data-chart-bottom" class="data-chart-bottom"></div>
+		</div>
+		<div id="data-maptransfer" class="data-maptransfer hide">
+		
+		</div>
+		<div class="page mask-layer">
+		    <div class="main_inner clearfix">
+		        <div class="mask-div">
+		            <div class="loader-inner line-spin-fade-loader">
+		                <div></div>
+		                <div></div>
+		                <div></div>
+		                <div></div>
+		                <div></div>
+		                <div></div>
+		                <div></div>
+		                <div></div>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+	</div>
+</div>
+<div id="gritter-notice-wrapper">
+	<div id="gritter-item-1" class="gritter-item-wrapper">
+		<div class="gritter-top"></div>
+		<div class="gritter-item">
+			<div class="gritter-close"></div>
+			<img src="img/iconfont-error.png" class="gritter-image">
+			<div class="gritter-with-image">
+				<!-- <span class="gritter-title">您所使用的浏览器不能使用热力图功能~</span>
+				<p>热力图目前只支持有canvas支持的浏览器</p> -->
+			</div>
+			<div style="clear:both"></div>
+		</div>
+		<div class="gritter-bottom"></div>
+	</div>
+</div>
+</body>
+</html>
