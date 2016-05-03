@@ -710,6 +710,8 @@ var MAP = {
 								_link.id = unicomBaseRoadpointV0.id;
 								_link.linkName = unicomBaseRoadpointV0.linkName;
 								_link.roadName = unicomBaseRoadpointV0.roadName;
+								//增加阈值
+								_link.margin = unicomBaseRoadpointV0.margin;
 								var longLatArr = unicomBaseRoadpointV0.longlat;
 								longLatArr = longLatArr.substring(0,longLatArr.length-1);
 								var bd09LinkPoints = MAP.changeAllLonLatToBd09(longLatArr);
@@ -750,6 +752,8 @@ var MAP = {
 								_link.id = unicomBaseRoadpointV0.id;
 								_link.linkName = unicomBaseRoadpointV0.linkName;
 								_link.roadName = unicomBaseRoadpointV0.roadName;
+								//增加阈值
+								_link.margin = unicomBaseRoadpointV0.margin;
 								var longLatArr = unicomBaseRoadpointV0.longlat;
 								longLatArr = longLatArr.substring(0,longLatArr.length-1);
 								var bd09LinkPoints = MAP.changeAllLonLatToBd09(longLatArr);
@@ -780,6 +784,7 @@ var MAP = {
 						var _link = _links[i];
 						var _speed =  +_link.speed;
 						var _lineArr =  _link.line;
+						var _marginArr = _link.margin.split(",");
 						var points = [];
 						if(_lineArr.length > 0){
 							for(var n=0; n<_lineArr.length; n++){
@@ -788,7 +793,7 @@ var MAP = {
 							}
 						}
 						if(points.length > 0){
-							var lineColor = (_speed >48)? "#0c9b05" : (_speed >20 && _speed <= 48)? "#fffd2c" : "#fb1409";
+							var lineColor = (_speed >_marginArr[1])? "#0c9b05" : (_speed >_marginArr[0] && _speed <= _marginArr[1])? "#fffd2c" : "#fb1409";
 							var polyline = new BMap.Polyline(points, {strokeColor:lineColor, strokeWeight:5, strokeOpacity:0.8}); 
 							opts.map.addOverlay(polyline);
 							MAP.addMouseoverHandler((_speed|0)+" km/h", polyline);
@@ -808,6 +813,7 @@ var MAP = {
 					var _link = _links[i];
 					var _speed =  +_link.speed;
 					var _lineArr =  _link.line;
+					var _marginArr = _link.margin.split(",");
 					var points = [];
 					
 					if(_lineArr.length > 0){
@@ -823,7 +829,7 @@ var MAP = {
 					}
 					
 					if(points.length > 0){
-						var lineColor = (_speed >48)? "#0c9b05" : (_speed >20 && _speed <= 48)? "#fffd2c" : "#fb1409";
+						var lineColor = (_speed >_marginArr[1])? "#0c9b05" : (_speed >_marginArr[0] && _speed <= _marginArr[1])? "#fffd2c" : "#fb1409";
 						var polyline = new BMap.Polyline(points, {strokeColor:lineColor, strokeWeight:5, strokeOpacity:0.8}); 
 						opts.map.addOverlay(polyline);
 						MAP.addMouseoverHandler((_speed|0)+" km/h", polyline);
@@ -864,6 +870,8 @@ var MAP = {
 								_link.id = unicomBaseRoadpointV0.id;
 								_link.linkName = unicomBaseRoadpointV0.linkName;
 								_link.roadName = unicomBaseRoadpointV0.roadName;
+								//增加阈值
+								_link.margin = unicomBaseRoadpointV0.margin;
 								var longLatArr = unicomBaseRoadpointV0.longlat;
 								longLatArr = longLatArr.substring(0,longLatArr.length-1);
 								var bd09LinkPoints = MAP.changeAllLonLatToBd09(longLatArr);
@@ -904,6 +912,8 @@ var MAP = {
 								_link.id = unicomBaseRoadpointV0.id;
 								_link.linkName = unicomBaseRoadpointV0.linkName;
 								_link.roadName = unicomBaseRoadpointV0.roadName;
+								//增加阈值
+								_link.margin = unicomBaseRoadpointV0.margin;
 								var longLatArr = unicomBaseRoadpointV0.longlat;
 								longLatArr = longLatArr.substring(0,longLatArr.length-1);
 								var bd09LinkPoints = MAP.changeAllLonLatToBd09(longLatArr);
